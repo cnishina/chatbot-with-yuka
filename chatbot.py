@@ -2,6 +2,7 @@ import os
 import asyncio
 from dotenv import load_dotenv
 from twitchio.ext import commands
+from focus import write_focus
 
 
 load_dotenv()
@@ -10,8 +11,8 @@ _ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 
 class Bot(commands.Bot):
     def __init__(self):
-        # Initialise our Bot with our access token, prefix and a list of channels
-        # to join on boot...
+        # Initialize our Bot with our access token, prefix and a list of
+        # channels to join on boot...
         super().__init__(
             token=_ACCESS_TOKEN,
             prefix="!",
@@ -26,5 +27,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def focus(self, ctx: commands.Context):
         author = ctx.message.author.name
-        message = ctx.message.content.replace("!focus", "")
+        message = ctx.message.content.replace("!focus ", "").strip()
+        timestamp = ctx.message.timestamp
+        write_focus(author, message, timestamp)
         await ctx.send(f"{author} is focusing: {message}.")
