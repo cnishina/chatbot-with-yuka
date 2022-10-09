@@ -4,7 +4,7 @@ import datetime
 import shutil
 
 
-_DATA_CSV = "focus.csv"
+_DATA_CSV = "focus"
 
 
 def _maybe_rotate_files(timestamp: datetime.datetime):
@@ -18,7 +18,7 @@ def _maybe_rotate_files(timestamp: datetime.datetime):
       timestamp: The datetime to compare with the timestamp in the csv file.
     """
     try:
-        with open(_DATA_CSV, "r", newline="") as csvfile:
+        with open(f"{_DATA_CSV}.csv", "r", newline="") as csvfile:
             data_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
             for row in data_reader:
                 last_timestamp = datetime.datetime.fromisoformat(row[1])
@@ -42,8 +42,8 @@ def _rotate_files(year: int, month: int):
       month: The month as a number. This will be formatted to MM.
     """
     month = "{:02d}".format(month)
-    shutil.copyfile(_DATA_CSV, f"focus_{year}_{month}.csv")
-    os.remove(_DATA_CSV)
+    shutil.copyfile(f"{_DATA_CSV}.csv", f"{_DATA_CSV}_{year}_{month}.csv")
+    os.remove(f"{_DATA_CSV}.csv")
 
 
 def write_focus(author: str, message: str, timestamp: datetime.datetime):
@@ -55,6 +55,6 @@ def write_focus(author: str, message: str, timestamp: datetime.datetime):
       timestamp: The timestamp of the message.
     """
     _maybe_rotate_files(timestamp)
-    with open(_DATA_CSV, "a", newline="") as csvfile:
+    with open(f"{_DATA_CSV}.csv", "a", newline="") as csvfile:
         data_writer = csv.writer(csvfile, delimiter=",", quotechar='"')
         data_writer.writerow([author, timestamp.isoformat(), message])
