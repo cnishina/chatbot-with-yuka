@@ -38,10 +38,12 @@ http://localhost:3000/#access_token=<access_token>&scope=chat%3Aread+chat%3Aedit
 ```
 
 Create a .env file at the root of this project and copy the `<access_token>`
-from the URL string. This should look as follows:
+from the URL string. In addition, add in the `<channel>` where the bot should
+send messages. This should look as follows:
 
 ```
 ACCESS_TOKEN=<access_token>
+CHANNEL=<channel>
 ```
 
 ## Running chatbot with poetry

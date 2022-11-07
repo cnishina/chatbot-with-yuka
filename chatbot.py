@@ -7,6 +7,7 @@ from focus import write_focus
 
 load_dotenv()
 _ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+_CHANNEL = os.getenv("CHANNEL")
 
 
 class Bot(commands.Bot):
@@ -16,7 +17,7 @@ class Bot(commands.Bot):
         super().__init__(
             token=_ACCESS_TOKEN,
             prefix="!",
-            initial_channels=["bedtimebear_808"],
+            initial_channels=[_CHANNEL],
         )
 
     async def event_ready(self):
@@ -29,5 +30,5 @@ class Bot(commands.Bot):
         author = ctx.message.author.name
         message = ctx.message.content.replace("!focus ", "").strip()
         timestamp = ctx.message.timestamp
-        write_focus(author, message, timestamp)
+        write_focus(author, message, timestamp.astimezone())
         await ctx.send(f"{author} is focusing: {message}.")
