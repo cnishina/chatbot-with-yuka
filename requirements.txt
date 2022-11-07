@@ -71,6 +71,6 @@ multidict==6.0.2; python_version >= "3.7" \
     --hash=sha256:4bae31803d708f6f15fd98be6a6ac0b6958fcf68fda3c77a048a4f9073704aae \
     --hash=sha256:5ff3bd75f38e4c43f1f470f2df7a4d430b821c4ce22be384e1459cb57d6bb013
 python-dotenv==0.21.0; python_version >= "3.7"
-twitchio==2.4.0
+twitchio==2.5.0
 typing-extensions==4.4.0; python_version >= "3.7"
 yarl==1.8.1; python_version >= "3.7"

@@ -11,27 +11,35 @@ def _maybe_rotate_files(timestamp: datetime.datetime):
     """Maybe rotates the file based on the timestamp.
 
     If the year or month does not match the current chat message timestamp, then
-    the file should be rotated. A limitation of this implementation is that it
-    uses UTC time and not the local timezone when doing this comparison.
+    the file should be rotated.
 
     Args:
-      timestamp: The datetime to compare with the timestamp in the csv file.
+      timestamp: The datetime to compare with the timestamp in the csv file
     """
     try:
         with open(f"{_DATA_CSV}.csv", "r", newline="") as csvfile:
             data_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
             for row in data_reader:
                 last_timestamp = datetime.datetime.fromisoformat(row[1])
+                last_local = _convert_to_local_datetime(last_timestamp)
+                curr_local = _convert_to_local_datetime(timestamp)
+
+                # Rotate files when the year / month are different.
                 if (
-                    last_timestamp.year != timestamp.year
-                    or last_timestamp.month != timestamp.month
+                    last_local.year != curr_local.year
+                    or last_local.month != curr_local.month
                 ):
-                    _rotate_files(last_timestamp.year, last_timestamp.month)
+                    _rotate_files(last_local.year, last_local.month)
                 # Return early since we just need to check a single timestamp.
                 return
     except FileNotFoundError:
         # no-op: This is acceptable if the file does not exist.
         return
+
+
+def _convert_to_local_datetime(timestamp):
+    """Converts the datetime by adding in the timezone difference."""
+    return timestamp + timestamp.tzinfo.utcoffset(timestamp)
 
 
 def _rotate_files(year: int, month: int):
@@ -52,7 +60,8 @@ def write_focus(author: str, message: str, timestamp: datetime.datetime):
     Args:
       author: The author of the focus message.
       message: The focus message without the focus command.
-      timestamp: The timestamp of the message.
+      timestamp: The timestamp of the message (timestamp includes the
+            timezone offset)
     """
     _maybe_rotate_files(timestamp)
     with open(f"{_DATA_CSV}.csv", "a", newline="") as csvfile:
