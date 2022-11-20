@@ -22,7 +22,8 @@ def _is_streaming() -> bool:
         "Authorization": "Bearer %s" % _ACCESS_TOKEN,
         "Client-Id": _CLIENT_ID,
     }
-    return bool(requests.get(url, headers=headers).data)
+    response = requests.get(url, headers=headers)
+    return bool(response.json()["data"])
 
 
 def _maybe_rotate_files(timestamp: datetime.datetime):
