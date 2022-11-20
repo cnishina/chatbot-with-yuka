@@ -62,6 +62,11 @@ class FocusTest(unittest.TestCase):
         timestamp = datetime.datetime(
             year=2022, month=10, day=1, hour=7, minute=1, tzinfo=tzinfo
         )
+
+        def _is_streaming():
+            return True
+
+        focus._is_streaming = _is_streaming
         focus.write_focus(
             "mr bear's friend",
             "I represent Queens, she was raised out in Brooklyn.",
@@ -83,6 +88,30 @@ class FocusTest(unittest.TestCase):
             for row in data_reader:
                 count += 1
         self.assertEqual(count, 1)
+
+    def test_not_write_focus(self):
+        tzinfo = datetime.timezone(datetime.timedelta(hours=-7))
+        timestamp = datetime.datetime(
+            year=2022, month=10, day=1, hour=7, minute=1, tzinfo=tzinfo
+        )
+
+        def _is_streaming():
+            return False
+
+        focus._is_streaming = _is_streaming
+        focus.write_focus(
+            "mr bear's friend",
+            "I represent Queens, she was raised out in Brooklyn.",
+            timestamp,
+        )
+
+        # The default file has not changed. The streamer is not live.
+        count = 0
+        with open(_TEST_FILE, "r", newline="") as csvfile:
+            data_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
+            for row in data_reader:
+                count += 1
+        self.assertEqual(count, 3)
 
 
 if __name__ == "__main__":
