@@ -66,5 +66,11 @@ python3 main.py
 ## Running unit tests
 
 ```
-python -m unittest focus_test.py
+python3 -m unittest focus_test.py
+```
+
+## Updating the requirements.txt from Poetry
+
+```
+poetry export -f requirements.txt --output requirements.txt
 ```

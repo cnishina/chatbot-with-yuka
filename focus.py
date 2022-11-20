@@ -1,10 +1,28 @@
 import os
 import csv
 import datetime
+import requests
 import shutil
+from dotenv import load_dotenv
 
+
+load_dotenv()
+_ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+_CHANNEL = os.getenv("CHANNEL")
+_CLIENT_ID = os.getenv("CLIENT_ID")
 
 _DATA_CSV = "focus"
+_TWITCH_STREAM_API_ENDPOINT = "https://api.twitch.tv/helix/streams?{}"
+
+
+def _is_streaming() -> bool:
+    """Checks if the streamer is live on Twitch."""
+    url = _TWITCH_STREAM_API_ENDPOINT.format("user_login=%s" % _CHANNEL)
+    headers = {
+        "Authorization": "Bearer %s" % _ACCESS_TOKEN,
+        "Client-Id": _CLIENT_ID,
+    }
+    return bool(requests.get(url, headers=headers).data)
 
 
 def _maybe_rotate_files(timestamp: datetime.datetime):
@@ -63,6 +81,10 @@ def write_focus(author: str, message: str, timestamp: datetime.datetime):
       timestamp: The timestamp of the message (timestamp includes the
             timezone offset)
     """
+    if not _is_streaming():
+        # The streamer is not live, do not write a focus.
+        return
+
     _maybe_rotate_files(timestamp)
     with open(f"{_DATA_CSV}.csv", "a", newline="") as csvfile:
         data_writer = csv.writer(csvfile, delimiter=",", quotechar='"')
