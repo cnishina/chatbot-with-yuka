@@ -8,9 +8,11 @@ import focus
 # This ensures that the file we write is not the default one.
 # The prefix is for testing only.
 focus._DATA_CSV = "test_focus"
+focus._SUMMARY_CSV = "test_summary"
 
 _TEST_FILE = "test_focus.csv"
 _ROTATED_TEST_FILE = "test_focus_2022_09.csv"
+_TEST_SUMMARY_FILE = "test_summary_2022_09.csv"
 
 
 def initialize_file():
@@ -37,6 +39,11 @@ def remove_files():
         os.remove(_ROTATED_TEST_FILE)
     except:
         # no-op: tries to remove the rotated file.
+        pass
+    try:
+        os.remove(_TEST_SUMMARY_FILE)
+    except:
+        # no-op: tries to remove the summary file.
         pass
 
 
@@ -112,6 +119,41 @@ class FocusTest(unittest.TestCase):
             for row in data_reader:
                 count += 1
         self.assertEqual(count, 3)
+
+    def test_tally_focus_counts(self):
+        # The test counts for September posts
+        # The initialize_file writes the same focus command 3 times at 11:59 pm
+        # on 2002/09/30.
+        with open(f"{focus._DATA_CSV}.csv", "a", newline="") as csvfile:
+            data_writer = csv.writer(csvfile, delimiter=",", quotechar='"')
+            author = "mr bear's friend"
+            timestamp = datetime.datetime.fromisoformat(
+                "2022-09-10T06:59:00.000000-07:00"
+            )
+            message = "Doing it and doing it and doing it well."
+            data_writer.writerow([author, timestamp.isoformat(), message])
+            timestamp = datetime.datetime.fromisoformat(
+                "2022-09-11T06:59:00.000000-07:00"
+            )
+            data_writer.writerow([author, timestamp.isoformat(), message])
+            timestamp = datetime.datetime.fromisoformat(
+                "2022-09-12T06:59:00.000000-07:00"
+            )
+            data_writer.writerow([author, timestamp.isoformat(), message])
+            timestamp = datetime.datetime.fromisoformat(
+                "2022-09-13T06:59:00.000000-07:00"
+            )
+            message = "I represent Queens, she was raised out in Brooklyn."
+            data_writer.writerow([author, timestamp.isoformat(), message])
+        focus._tally_focus_counts(2022, 9)
+
+        tallies: Dict[str, int] = {}
+        with open(_TEST_SUMMARY_FILE, "r", newline="") as csvfile:
+            data_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
+            for row in data_reader:
+                tallies[row[0]] = row[1]
+        self.assertEqual(tallies["mr bear"], "1")
+        self.assertEqual(tallies["mr bear's friend"], "4")
 
 
 if __name__ == "__main__":

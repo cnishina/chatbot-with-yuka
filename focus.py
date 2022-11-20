@@ -12,6 +12,7 @@ _CHANNEL = os.getenv("CHANNEL")
 _CLIENT_ID = os.getenv("CLIENT_ID")
 
 _DATA_CSV = "focus"
+_SUMMARY_CSV = "sumary"
 _TWITCH_STREAM_API_ENDPOINT = "https://api.twitch.tv/helix/streams?{}"
 
 
@@ -48,6 +49,7 @@ def _maybe_rotate_files(timestamp: datetime.datetime):
                     last_local.year != curr_local.year
                     or last_local.month != curr_local.month
                 ):
+                    _tally_focus_counts(last_local.year, last_local.month)
                     _rotate_files(last_local.year, last_local.month)
                 # Return early since we just need to check a single timestamp.
                 return
@@ -59,6 +61,39 @@ def _maybe_rotate_files(timestamp: datetime.datetime):
 def _convert_to_local_datetime(timestamp):
     """Converts the datetime by adding in the timezone difference."""
     return timestamp + timestamp.tzinfo.utcoffset(timestamp)
+
+
+def _tally_focus_counts(year: int, month: int):
+    """Tallies focus commands once per user per day.
+
+    The tallying must happen before rotating the file.
+
+    Args:
+      year: The 4 digit number representing the year.
+      month: The month as a number. This will be formatted to MM.
+    """
+    # dictionary of author and a list of dates
+    tallies: Dict[str, Union[Set[str], List[str]]] = {}
+    with open(f"{_DATA_CSV}.csv", "r", newline="") as csvfile:
+        data_reader = csv.reader(csvfile, delimiter=",", quotechar='"')
+        for row in data_reader:
+            author = row[0]
+            timestamp = datetime.datetime.fromisoformat(row[1])
+            local_timestamp = _convert_to_local_datetime(timestamp)
+
+            date = local_timestamp.strftime("%Y-%m-%d")
+            tallies.setdefault(author, [])
+            tallies[author].append(date)
+
+    # This helps remove duplicate dates.
+    for author, dates in tallies.items():
+        tallies[author] = set(dates)
+
+    month = "{:02d}".format(month)
+    with open(f"{_SUMMARY_CSV}_{year}_{month}.csv", "a", newline="") as csvfile:
+        data_writer = csv.writer(csvfile, delimiter=",", quotechar='"')
+        for author, date_count in tallies.items():
+            data_writer.writerow([author, len(date_count)])
 
 
 def _rotate_files(year: int, month: int):
